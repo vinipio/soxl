@@ -48,7 +48,7 @@ def main():
         "function note(t,err){var b=document.getElementById('banner');b.style.display='block';b.className='banner'+(err?' err':'');b.textContent=t}\n"
         "var q=new URLSearchParams(location.search),BUILD='%s';\n"
         "note('Iniciando...');\n"
-        "var W=new Worker('%s?v='+BUILD);\n"
+        "var W=new Worker('%s?v='+BUILD,{type:'module'});\n"
         "W.onmessage=function(m){var d=m.data;if(d.type==='state')render(d.state);else if(d.type==='status')note(d.text,d.error)};\n"
         "W.onerror=function(e){note('Falha ao carregar o motor: '+(e.message||e),true)};\n"
         "W.postMessage({type:'boot',coin:q.get('coin')||'xyz:SOXL',poll:parseFloat(q.get('poll'))||4,build:BUILD});\n"

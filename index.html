@@ -1,4 +1,4 @@
-<!-- GERADO por build_web.py a partir de soxl_live.py (PAGE). Nao edite a mao. build c48a3140e7 -->
+<!-- GERADO por build_web.py a partir de soxl_live.py (PAGE). Nao edite a mao. build 51206961a0 -->
 <!DOCTYPE html>
 <html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>SOXL ao vivo</title>
@@ -119,9 +119,9 @@ function render(S){
  document.title=(S.last==null?'':f(S.last,2)+' · ')+'SOXL ao vivo';
 }
 function note(t,err){var b=document.getElementById('banner');b.style.display='block';b.className='banner'+(err?' err':'');b.textContent=t}
-var q=new URLSearchParams(location.search),BUILD='c48a3140e7';
+var q=new URLSearchParams(location.search),BUILD='51206961a0';
 note('Iniciando...');
-var W=new Worker('soxl_web_worker.js?v='+BUILD);
+var W=new Worker('soxl_web_worker.js?v='+BUILD,{type:'module'});
 W.onmessage=function(m){var d=m.data;if(d.type==='state')render(d.state);else if(d.type==='status')note(d.text,d.error)};
 W.onerror=function(e){note('Falha ao carregar o motor: '+(e.message||e),true)};
 W.postMessage({type:'boot',coin:q.get('coin')||'xyz:SOXL',poll:parseFloat(q.get('poll'))||4,build:BUILD});

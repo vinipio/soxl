@@ -1,7 +1,8 @@
 /* soxl_web_worker.js -- roda o motor do monitor (soxl_live.py) dentro do navegador.
    O arquivo soxl_live.py publicado ao lado e carregado como esta e executado pelo Pyodide (Python em WebAssembly).
    A unica troca e o transporte HTTP (soxl_live.http_post), que aqui usa XMLHttpRequest.
-   A cada passo chama soxl_live.live_step() e envia soxl_live.Monitor.state() para a pagina. */
+   A cada passo chama soxl_live.live_step() e envia soxl_live.Monitor.state() para a pagina.
+   Este arquivo e um worker do tipo modulo (new Worker(url, {type: 'module'})): o Pyodide 314 nao aceita worker classico. */
 var PYODIDE_VERSION = '314.0.8';
 var PYODIDE_BASE = 'https://cdn.jsdelivr.net/pyodide/v' + PYODIDE_VERSION + '/full/';
 var ENGINE_FILE = 'soxl_live.py';
@@ -64,8 +65,8 @@ async function boot(cfg) {
   try {
     POLL = cfg.poll || 4.0;
     status('Carregando o motor Python no navegador (na primeira vez são cerca de 12 MB; depois fica em cache)...');
-    importScripts(PYODIDE_BASE + 'pyodide.js');
-    var py = await loadPyodide({indexURL: PYODIDE_BASE});
+    var pyodideModule = await import(PYODIDE_BASE + 'pyodide.mjs');
+    var py = await pyodideModule.loadPyodide({indexURL: PYODIDE_BASE});
     status('Carregando as estratégias (' + ENGINE_FILE + ')...');
     var resp = await fetch(ENGINE_FILE + '?v=' + encodeURIComponent(cfg.build || Date.now()), {cache: 'no-store'});
     if (!resp.ok) throw new Error(ENGINE_FILE + ': HTTP ' + resp.status);
@@ -81,7 +82,7 @@ async function boot(cfg) {
   }
 }
 
-onmessage = function (m) {
+self.onmessage = function (m) {
   var d = m.data || {};
   if (d.type === 'boot') boot(d);
   else if (d.type === 'now') step();      // a aba voltou a ficar visivel: atualiza na hora
