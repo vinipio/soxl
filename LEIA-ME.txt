@@ -1,0 +1,60 @@
+SOXL - analise de candles e monitor em tempo real
+=================================================
+
+USO DIARIO
+  python soxl_live.py            Monitor em tempo real de 10 estrategias (4 da rodada 2, 2 versoes da rodada 1, 4 dependentes de regime) (painel em http://localhost:8765).
+                                 Grava soxl_live_log.csv nesta pasta.
+  python soxl_live.py replay AAAA-MM-DD     Repassa um pregao recente (ate ~3 dias atras) acelerado.
+  python soxl_hl.py              Atualiza a base de candles do perp xyz:SOXL (hl_candles.db) e gera
+                                 soxl_hl_dashboard.html. Rodar pelo menos a cada 3 dias para nao perder o 1 minuto.
+
+ARQUIVOS
+  soxl_live.py             Monitor em tempo real (so biblioteca padrao do Python).
+  soxl_hl.py               Base de dados de candles da Hyperliquid + visualizador (precisa de pandas).
+  soxl_estrategias.html    Relatorio do estudo: ranking das estrategias testadas, curvas e gatilhos.
+
+  backtest\                Estudo completo sobre os candles de 1 minuto do ETF (Massive, 11/05 a 10/11/2026)
+    lab.py                 Motor comum de backtest (execucao, custos, treino/teste).
+    agents\                Um script por familia de estrategia (orb, momentum, meanrev, gap, eod, patterns).
+    results\               Trades e metricas de cada finalista (JSON + CSV).
+    data\soxl_1m_raw.csv   Candles de 1 minuto usados no estudo.
+    verify.py              Reimplementacao independente dos finalistas + testes de robustez.
+    build_report.py        Regera soxl_estrategias.html / .json a partir de results\.
+    BRIEF.md               Regras de metodologia dadas aos agentes.
+
+CONFERIR QUE O MONITOR USA AS MESMAS REGRAS DO BACKTEST
+  python soxl_live.py validate --csv backtest\data\soxl_1m_all.csv --trades-dir backtest
+  (deve mostrar "identico: SIM" nas dez estrategias)
+
+OBSERVACOES
+  - Horarios de referencia: pregao de Nova York, 09:30-16:00.
+  - O monitor so sinaliza; nao envia ordens. Resultados mostrados sao brutos (sem custo).
+  - Feriados e pregoes curtos da NYSE nao sao tratados: ignore os sinais nesses dias.
+
+RODADA 2 (historico de 1 ano: 2025-11-11 a 2026-11-10, 249 pregoes)
+  backtest\data\soxl_1m_all.csv     Os dois arquivos da Massive juntos. lab.py agora le este arquivo.
+  Periodos: P0 = nov/25-mai/26 (alta) | P1 = mai-ago/26 (treino original) | P2 = set-nov/26 (teste original)
+  backtest\results\                 Rodada 1 original (so P1 e P2), como entregue antes.
+  backtest\results_frozen\          As 17 regras da rodada 1, sem ajuste, reavaliadas no ano inteiro.
+                                    periodos.csv = tabela P0/P1/P2 de cada uma.
+  backtest\results_v2\              Nova busca com treino = P0+P1 (regra aceita so se positiva nos dois).
+                                    periodos.csv = tabela P0/P1/P2 dos novos finalistas.
+  backtest\agents\*_v2.py           Scripts da nova busca.  backtest\BRIEF2.md = regras dadas aos agentes.
+  python backtest\periods.py results_frozen     (ou results_v2) regera a tabela por periodo.
+  Atencao: como lab.py passou a ler o ano inteiro, os scripts da rodada 1 (agents\*.py, verify.py,
+  extra_fade.py, pnl_usd.py) agora rodam sobre 249 pregoes e dao numeros diferentes dos originais.
+
+CONCLUSAO DA RODADA 2
+  Nenhuma das 17 regras da rodada 1 teve resultado significativo em P0; o falso rompimento de 15 min perdeu.
+  Com 7.912 configuracoes na nova busca, nada e robusto aos dois regimes com margem e significancia.
+
+VERSAO WEB (GitHub Pages) -- o mesmo painel, aberto de qualquer lugar
+  index.html             Painel web. GERADO por build_web.py a partir do painel (PAGE) do soxl_live.py; nao editar a mao.
+  soxl_web_worker.js     Carrega o soxl_live.py no navegador (Pyodide) e chama live_step() a cada 4 s.
+  build_web.py           Regera o index.html. Rodar quando mudar o painel; mudanca nas estrategias nao precisa.
+  publicar_github.bat    Regera o index.html, faz commit e envia tudo para o GitHub (dois cliques).
+  .gitignore             Ficam fora do GitHub: backtest\data (candles da Massive), os .zip, _backup e __pycache__.
+  Como funciona: o navegador busca os candles direto na Hyperliquid e roda as MESMAS regras do soxl_live.py
+  (a unica troca e o transporte HTTP). So roda com a pagina aberta; ao abrir, reconstroi o dia. Nao grava
+  soxl_live_log.csv e nao manda notificacao. Opcoes no endereco: ?coin=xyz:SOXL&poll=4
+  O monitor do PC (python soxl_live.py) continua funcionando igual.

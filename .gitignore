@@ -1,0 +1,13 @@
+# Python
+__pycache__/
+*.pyc
+
+# copias de seguranca e pacotes ja contidos na pasta
+_backup/
+*.zip
+
+# candles de 1 minuto da Massive (dado de fornecedor; nao publicar)
+backtest/data/
+
+# base local de candles da Hyperliquid (gerada por soxl_hl.py)
+hl_candles.db

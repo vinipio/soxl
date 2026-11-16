@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SOXL - estratégias intraday testadas</title>
+<style>
+:root{--bg:#fcfcfb;--panel:#f3f3f0;--ink:#1a1a19;--ink2:#5d5c55;--line:#e1e0da;--s1:#2a78d6;--s2:#eb6834;--s3:#1baf7a;--s4:#eda100;--s5:#e87ba4;--s6:#008300}
+@media (prefers-color-scheme:dark){:root{--bg:#1a1a19;--panel:#242422;--ink:#f0efec;--ink2:#c3c2b7;--line:#3a3a36;--s1:#3987e5;--s2:#d95926;--s3:#199e70;--s4:#c98500;--s5:#d55181;--s6:#008300}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 -apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+.wrap{max-width:1180px;margin:0 auto;padding:24px}h1{font-size:20px;margin:0 0 4px}h2{font-size:15px;margin:28px 0 8px}
+.sub{color:var(--ink2);font-size:13px}.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin:16px 0}
+.tile{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px 12px}.tile .k{color:var(--ink2);font-size:11px;text-transform:uppercase;letter-spacing:.04em}
+.tile .v{font-size:20px;font-weight:600;font-variant-numeric:tabular-nums}.tile .d{color:var(--ink2);font-size:12px}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:13px}th,td{padding:6px 8px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+th{color:var(--ink2);font-weight:500;font-size:12px}th:first-child,td:first-child,th:nth-child(2),td:nth-child(2){text-align:left}
+.scroll{overflow-x:auto}.tag{display:inline-block;border:1px solid var(--line);border-radius:10px;padding:0 8px;font-size:11px}
+.tag.c{border-color:var(--ink);font-weight:600}.grp th{border-bottom:none;text-align:center}
+.chart{position:relative;border:1px solid var(--line);border-radius:8px;padding:8px}.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--ink2);margin:6px 4px}
+.legend i{display:inline-block;width:14px;height:3px;border-radius:2px;margin-right:6px;vertical-align:middle}
+#tip{position:absolute;pointer-events:none;background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:6px 8px;font-size:12px;display:none;font-variant-numeric:tabular-nums}
+.card{border:1px solid var(--line);border-radius:8px;padding:12px 14px;margin:10px 0}.card h3{margin:0 0 4px;font-size:14px}.card p{margin:4px 0;color:var(--ink2)}.card p b{color:var(--ink)}
+.note{color:var(--ink2);font-size:12px;margin-top:6px}
+</style></head><body><div class="wrap">
+<h1>SOXL: estratégias intraday testadas em candles de 1 minuto</h1><div class="sub" id="sub"></div>
+<div class="tiles" id="tiles"></div>
+<h2>PnL acumulado das estratégias que passaram no teste</h2>
+<div class="chart"><div class="legend" id="legend"></div><svg id="svg" width="100%" height="340"></svg><div id="tip"></div></div>
+<div class="note" id="chartnote"></div>
+<h2>Ranking de todos os finalistas</h2>
+<div class="scroll"><table id="rank"></table></div>
+<div class="note" id="ranknote"></div>
+<h2>Como acompanhar ao vivo as que passaram</h2><div id="cards"></div>
+<h2>Correlação do PnL diário entre elas</h2><div class="scroll"><table id="corr"></table></div>
+<h2>Configurações testadas por família</h2><table id="cfg"></table>
+</div>
+<script id="payload" type="application/json">__DATA__</script>
+<script>
+(function(){var D=JSON.parse(document.getElementById('payload').textContent),M=D.meta;
+function f(x,d){return x==null?'-':x.toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d})}
+function sg(x,d){return x==null?'-':(x>0?'+':'')+f(x,d)}
+var css=getComputedStyle(document.documentElement),C=['--s1','--s2','--s3','--s4','--s5','--s6'].map(function(n){return css.getPropertyValue(n).trim()});
+var V={candidata:'Candidata',hipotese:'Hipótese',descartada:'Descartada'};
+document.getElementById('sub').textContent='Dados de '+M.first+' a '+M.last+' ('+M.n_days+' pregões). Treino até '+M.is_end+' ('+M.n_is+' pregões), teste depois ('+M.n_oos+' pregões). Custo base '+f(M.cost_base,0)+' bps por lado; estresse '+f(M.cost_stress,0)+' bps por lado.';
+var nC=D.strategies.filter(function(s){return s.verdict==='candidata'}).length,nH=D.strategies.filter(function(s){return s.verdict==='hipotese'}).length;
+var T=[['Configurações testadas',f(M.n_configs,0),M.n_finalists+' finalistas levados ao teste'],['Candidatas',nC,'positivas no treino e no teste, t ≥ 2 no teste'],['Hipóteses',nH,'positivas nos dois, t entre 1 e 2 no teste'],['Descartadas',M.n_finalists-nC-nH,'falharam no teste ou no custo de estresse'],['Abertura→fechamento',sg(D.bench.oc_is_pct,1)+'% / '+sg(D.bench.oc_oos_pct,1)+'%','soma no treino / no teste'],['Amplitude diária média',f(D.bench.rng_is_pct,1)+'% / '+f(D.bench.rng_oos_pct,1)+'%','treino / teste']];
+document.getElementById('tiles').innerHTML=T.map(function(t){return '<div class="tile"><div class="k">'+t[0]+'</div><div class="v">'+t[1]+'</div><div class="d">'+t[2]+'</div></div>'}).join('');
+// ranking
+var h='<tr class="grp"><th></th><th></th><th></th><th colspan="4">Treino</th><th colspan="5">Teste</th><th colspan="2">Compra / venda no teste</th><th></th></tr><tr><th>Estratégia</th><th>Família</th><th>Veredito</th><th>n</th><th>bps/trade</th><th>t</th><th>acerto</th><th>n</th><th>bps/trade</th><th>t</th><th>acerto</th><th>bps no estresse</th><th>compra</th><th>venda</th><th>pior trade</th></tr>';
+document.getElementById('rank').innerHTML=h+D.strategies.map(function(s){return '<tr><td>'+s.name+'</td><td>'+s.family_label+'</td><td><span class="tag '+(s.verdict==='candidata'?'c':'')+'">'+V[s.verdict]+'</span></td><td>'+s.IS.n_trades+'</td><td>'+sg(s.IS.avg_net_bps,1)+'</td><td>'+f(s.IS.t_stat,2)+'</td><td>'+f(s.IS.win_rate*100,0)+'%</td><td>'+s.OOS.n_trades+'</td><td>'+sg(s.OOS.avg_net_bps,1)+'</td><td>'+f(s.OOS.t_stat,2)+'</td><td>'+f(s.OOS.win_rate*100,0)+'%</td><td>'+sg(s.oos_stress_bps,1)+'</td><td>'+sg(s.long_oos,0)+'</td><td>'+sg(s.short_oos,0)+'</td><td>'+f(s.worst_trade_pct,1)+'%</td></tr>'}).join('');
+document.getElementById('ranknote').textContent='bps/trade = retorno líquido médio por trade no custo base, sem alavancagem. t = média dividida pelo erro-padrão dos trades. Os parâmetros foram escolhidos só no treino.';
+// cards
+var top=D.strategies.filter(function(s){return s.verdict!=='descartada'});
+document.getElementById('cards').innerHTML=top.map(function(s){return '<div class="card"><h3>'+s.name+' <span class="tag '+(s.verdict==='candidata'?'c':'')+'">'+V[s.verdict]+'</span></h3><p>'+s.description+'</p><p><b>Gatilho:</b> '+s.live_trigger+'</p><p>Amostra inteira: '+s.ALL.n_trades+' trades, acerto '+f(s.ALL.win_rate*100,0)+'%, ganho médio '+sg(s.ALL.avg_win_bps,0)+' bps, perda média '+sg(s.ALL.avg_loss_bps,0)+' bps, pior trade '+f(s.worst_trade_pct,1)+'%, duração média '+f(s.ALL.avg_hold_min,0)+' min, maior queda acumulada '+f(s.ALL.max_dd_pct,1)+'%.</p></div>'}).join('');
+// corr
+var cn=D.corr_names;document.getElementById('corr').innerHTML='<tr><th></th><th></th>'+cn.map(function(n,i){return '<th>'+(i+1)+'</th>'}).join('')+'</tr>'+D.corr.map(function(r,i){return '<tr><td>'+(i+1)+'. '+cn[i]+'</td><td></td>'+r.map(function(x){return '<td>'+f(x,2)+'</td>'}).join('')+'</tr>'}).join('');
+document.getElementById('cfg').innerHTML='<tr><th>Família</th><th></th><th>Configurações</th></tr>'+Object.keys(M.fam_cfg).map(function(k){return '<tr><td>'+k+'</td><td></td><td>'+f(M.fam_cfg[k],0)+'</td></tr>'}).join('');
+// chart
+var svg=document.getElementById('svg'),tip=document.getElementById('tip'),NS='http://www.w3.org/2000/svg';
+document.getElementById('legend').innerHTML=D.curves.map(function(c,i){return '<span><i style="background:'+C[i]+'"></i>'+c.name+'</span>'}).join('');
+document.getElementById('chartnote').textContent='Soma dos retornos líquidos por trade (custo base, nocional constante, sem alavancagem), em %. A linha vertical separa treino e teste.';
+function el(n,a){var e=document.createElementNS(NS,n);for(var k in a)e.setAttribute(k,a[k]);svg.appendChild(e);return e}
+function draw(){while(svg.firstChild)svg.removeChild(svg.firstChild);var W=svg.clientWidth,H=340,L=48,R=14,Tp=10,B=26,n=D.dates.length;
+var all=[0];D.curves.forEach(function(c){all=all.concat(c.cum)});var mn=Math.min.apply(null,all),mx=Math.max.apply(null,all),pad=(mx-mn)*0.06;mn-=pad;mx+=pad;
+function X(i){return L+(W-L-R)*i/(n-1)}function Y(v){return Tp+(H-Tp-B)*(1-(v-mn)/(mx-mn))}
+var step=Math.pow(10,Math.floor(Math.log10(mx-mn)));if((mx-mn)/step<4)step/=2;
+for(var g=Math.ceil(mn/step)*step;g<=mx;g+=step){el('line',{x1:L,x2:W-R,y1:Y(g),y2:Y(g),stroke:css.getPropertyValue('--line'),'stroke-width':g===0?1.5:1});var t=el('text',{x:L-6,y:Y(g)+4,'text-anchor':'end','font-size':11,fill:css.getPropertyValue('--ink2')});t.textContent=f(g,0)+'%'}
+var lastM='';D.dates.forEach(function(d,i){var m=d.slice(0,7);if(m!==lastM){lastM=m;if(i>0){var t=el('text',{x:X(i),y:H-8,'text-anchor':'middle','font-size':11,fill:css.getPropertyValue('--ink2')});t.textContent=d.slice(5,7)+'/'+d.slice(2,4)}}});
+var k=D.dates.findIndex(function(d){return d>M.is_end});el('line',{x1:X(k-0.5),x2:X(k-0.5),y1:Tp,y2:H-B,stroke:css.getPropertyValue('--ink2'),'stroke-dasharray':'4 4'});
+var a=el('text',{x:X(k-0.5)-6,y:Tp+12,'text-anchor':'end','font-size':11,fill:css.getPropertyValue('--ink2')});a.textContent='treino';var b=el('text',{x:X(k-0.5)+6,y:Tp+12,'font-size':11,fill:css.getPropertyValue('--ink2')});b.textContent='teste';
+D.curves.forEach(function(c,i){el('path',{d:c.cum.map(function(v,j){return (j?'L':'M')+X(j).toFixed(1)+' '+Y(v).toFixed(1)}).join(''),fill:'none',stroke:C[i],'stroke-width':2,'stroke-linejoin':'round'})});
+var cur=el('line',{y1:Tp,y2:H-B,stroke:css.getPropertyValue('--ink2'),'stroke-width':1,visibility:'hidden'});
+svg.onmousemove=function(e){var r=svg.getBoundingClientRect(),i=Math.round((e.clientX-r.left-L)/(W-L-R)*(n-1));if(i<0||i>=n){svg.onmouseleave();return}
+cur.setAttribute('x1',X(i));cur.setAttribute('x2',X(i));cur.setAttribute('visibility','visible');
+tip.innerHTML='<b>'+D.dates[i]+'</b><br>'+D.curves.map(function(c,j){return '<i style="display:inline-block;width:8px;height:8px;border-radius:2px;background:'+C[j]+';margin-right:5px"></i>'+c.name+': '+sg(c.cum[i],1)+'%'}).join('<br>');
+tip.style.display='block';var tx=X(i)+16;if(tx+260>W)tx=X(i)-270;tip.style.left=tx+'px';tip.style.top='40px'};
+svg.onmouseleave=function(){cur.setAttribute('visibility','hidden');tip.style.display='none'}}
+draw();window.addEventListener('resize',draw)})();
+</script></body></html>

@@ -1,0 +1,130 @@
+<!-- GERADO por build_web.py a partir de soxl_live.py (PAGE). Nao edite a mao. build c48a3140e7 -->
+<!DOCTYPE html>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SOXL ao vivo</title>
+<meta name="robots" content="noindex,nofollow">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="SOXL ao vivo">
+<style>
+:root{--bg:#fcfcfb;--panel:#f3f3f0;--ink:#1a1a19;--ink2:#5d5c55;--line:#e1e0da;--up:#0b8f7a;--down:#d6453d;
+--s1:#2a78d6;--s2:#eb6834;--s3:#1baf7a;--s4:#eda100;--s5:#e87ba4;--s6:#6250d6;--s7:#008300;--s8:#e34948;--hl:#fff3c4}
+@media (prefers-color-scheme:dark){:root{--bg:#1a1a19;--panel:#242422;--ink:#f0efec;--ink2:#c3c2b7;--line:#3a3a36;--up:#1fa38d;--down:#e2574d;
+--s1:#3987e5;--s2:#d95926;--s3:#199e70;--s4:#c98500;--s5:#d55181;--s6:#9085e9;--s7:#008300;--s8:#e66767;--hl:#4a3f12}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 -apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+.wrap{max-width:1400px;margin:0 auto;padding:16px 20px}
+.top{display:flex;gap:18px;align-items:baseline;flex-wrap:wrap}.top h1{font-size:18px;margin:0}.top .px{font-size:22px;font-weight:600;font-variant-numeric:tabular-nums}
+.top .meta{color:var(--ink2);font-size:13px}.top .sp{flex:1}
+button{background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:5px 11px;cursor:pointer;font:inherit}
+.banner{margin:10px 0;padding:8px 12px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--ink2);font-size:13px}
+.banner.err{border-color:var(--down);color:var(--ink)}
+.regime{margin:10px 0;padding:8px 12px;border:1px solid var(--line);border-left:4px solid var(--ink2);border-radius:8px;font-size:13px;display:flex;gap:6px 18px;flex-wrap:wrap;align-items:baseline}
+.regime.on{border-left-color:var(--ink)}.regime b{font-size:14px}.regime .m{color:var(--ink2)}
+.grid{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(340px,1fr);gap:16px;align-items:start}
+@media (max-width:1000px){.grid{grid-template-columns:1fr}}
+@media (max-width:600px){.wrap{padding:10px 12px}#chart{height:340px}td,th{padding:5px 5px}}
+.chartbox{border:1px solid var(--line);border-radius:8px;overflow:hidden}#chart{height:520px}
+.legend{display:flex;gap:6px 14px;flex-wrap:wrap;font-size:12px;color:var(--ink2);padding:8px 10px;border-top:1px solid var(--line)}
+.legend label{display:flex;align-items:center;gap:5px;cursor:pointer}.legend i{display:inline-block;width:14px;height:3px;border-radius:2px}
+.card{border:1px solid var(--line);border-left:4px solid var(--line);border-radius:8px;padding:10px 12px;margin-bottom:10px}
+.card.act{background:var(--hl)}.card h3{margin:0;font-size:14px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.tag{border:1px solid var(--line);border-radius:10px;padding:0 8px;font-size:11px;font-weight:400;color:var(--ink2)}
+.tag.c{border-color:var(--ink);color:var(--ink);font-weight:600}.stage{margin-left:auto;font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink2)}
+.card .st{margin:5px 0 3px;font-variant-numeric:tabular-nums}.card .rule{color:var(--ink2);font-size:12px}
+.card .tr{font-size:12px;color:var(--ink2);font-variant-numeric:tabular-nums;margin-top:3px}
+h2{font-size:14px;margin:18px 0 6px}.grp{font-size:12px;color:var(--ink2);margin:14px 0 6px;font-weight:600}.grp:first-child{margin-top:0}table{width:100%;border-collapse:collapse;font-size:13px;font-variant-numeric:tabular-nums}
+td,th{padding:5px 8px;border-bottom:1px solid var(--line);text-align:left}th{color:var(--ink2);font-weight:500;font-size:12px}
+tr.new td{background:var(--hl)}.k{font-weight:600}
+</style></head><body><div class="wrap">
+<div class="top"><h1 id="title">SOXL ao vivo</h1><span class="px" id="px"></span><span class="meta" id="clock"></span><span class="sp"></span>
+<span class="meta" id="mode"></span><button id="snd">Ativar som</button></div>
+<div class="banner" id="banner" style="display:none"></div>
+<div class="regime" id="regime" style="display:none"></div>
+<div class="grid"><div>
+<div class="chartbox"><div id="chart"></div><div class="legend" id="legend"></div></div>
+<h2>Eventos de hoje</h2><table id="feed"></table>
+</div><div id="cards"></div></div>
+<div class="banner">Hipóteses estatísticas medidas em 249 pregões do ETF (nov/2025 a nov/2026); nenhuma tem vantagem demonstrada com folga. O painel só sinaliza, não envia ordens. Em feriados e pregões curtos da NYSE, ignore os sinais.</div>
+</div>
+<script src="lightweight-charts-4.2.3.standalone.js"></script>
+<script>
+(function(){
+var css=getComputedStyle(document.documentElement);function v(n){return css.getPropertyValue(n).trim()}
+var COL={lunch_trend:v('--s1'),mom_2h_gap:v('--s2'),noise_125:v('--s3'),last2min:v('--s4'),mom_2h:v('--ink2'),noise_band:v('--ink2'),fade_or15:v('--s5'),fade_or30:v('--s6'),vwap_band:v('--s7'),stretch_1m:v('--s8')};
+var UP=v('--up'),DOWN=v('--down'),INK2=v('--ink2'),LINE=v('--line'),BG=v('--bg');
+var VD={robusta:'Mesmo sinal nos 3 períodos',anterior:'Versão da 1ª rodada',regime:'Dependente de regime'};
+var GT={robusta:'Rodada 2: mesmo sinal nos três períodos (evidência ainda fraca)',anterior:'Versões da 1ª rodada das mesmas ideias',regime:'Dependentes de regime: ganharam de mai a nov/2026, perderam de nov/2025 a mai/2026'};
+var show={lunch_trend:true,mom_2h_gap:true,noise_125:true,last2min:true,mom_2h:false,noise_band:false,fade_or15:false,fade_or30:false,vwap_band:false,stretch_1m:false};
+var nyOff=-5,chart=null,series=null,lines=[],lastLen=-1,lastT=0,lastId=0,first=true,audio=null,fitted=false;
+function f(x,d){return x==null?'-':x.toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d,useGrouping:false})}
+function hm(sec){var d=new Date((sec+nyOff*3600)*1000);return ('0'+d.getUTCHours()).slice(-2)+':'+('0'+d.getUTCMinutes()).slice(-2)}
+function beep(){if(!audio)return;try{var o=audio.createOscillator(),g=audio.createGain();o.connect(g);g.connect(audio.destination);o.frequency.value=880;g.gain.value=0.15;o.start();o.stop(audio.currentTime+0.35)}catch(e){}}
+document.getElementById('snd').onclick=function(){audio=audio||new (window.AudioContext||window.webkitAudioContext)();audio.resume();beep();this.textContent='Som ativado'};
+if(window.LightweightCharts){
+chart=LightweightCharts.createChart(document.getElementById('chart'),{autoSize:true,
+ layout:{background:{color:BG},textColor:INK2,fontSize:11},grid:{vertLines:{color:LINE},horzLines:{color:LINE}},
+ rightPriceScale:{borderColor:LINE,minimumWidth:70},crosshair:{mode:LightweightCharts.CrosshairMode.Normal},
+ localization:{timeFormatter:function(t){return hm(t)+' NY'}},
+ timeScale:{borderColor:LINE,timeVisible:true,secondsVisible:false,rightOffset:8,tickMarkFormatter:function(t){return hm(t)}}});
+series=chart.addCandlestickSeries({upColor:UP,downColor:DOWN,borderUpColor:UP,borderDownColor:DOWN,wickUpColor:UP,wickDownColor:DOWN,
+ priceFormat:{type:'price',precision:3,minMove:0.001}});}
+else{document.getElementById('chart').innerHTML='<div style="padding:20px;color:'+INK2+'">Biblioteca de gráfico não carregada (sem internet na primeira execução). Os cartões e eventos funcionam normalmente.</div>'}
+function render(S){
+ nyOff=S.ny_offset;
+ document.getElementById('title').textContent=S.coin+' ao vivo';
+ document.getElementById('px').textContent=S.last==null?'':f(S.last,3);
+ document.getElementById('clock').textContent='Nova York '+S.ny_time.slice(11)+' · São Paulo '+S.sp_time+(S.date?' · pregão '+S.date:'');
+ document.getElementById('mode').textContent=S.mode+' · '+S.phase;
+ var b=document.getElementById('banner'),msg=S.error?('Falha de conexão: '+S.error):S.message;
+ b.style.display=msg?'block':'none';b.textContent=msg;b.className='banner'+(S.error?' err':'');
+ var rg=document.getElementById('regime');
+ if(S.prev_rng!=null){rg.style.display='flex';rg.className='regime'+(S.active?' on':'');
+  rg.innerHTML='<b>'+(S.active?'● DIA ATIVO':'○ DIA CALMO')+' para as estratégias de tendência</b>'+
+   '<span>Amplitude do pregão anterior ('+S.prev_date.slice(8,10)+'/'+S.prev_date.slice(5,7)+'): <b>'+f(S.prev_rng,1)+'%</b> (corte: '+f(S.active_thr,0)+'%)</span>'+
+   (S.today_rng!=null?'<span class="m">Hoje até agora: '+f(S.today_rng,1)+'%</span>':'')+
+   '<span class="m">Só informativo: os sinais não mudam.</span>'}
+ else rg.style.display='none';
+ // grafico
+ if(series){
+  var data=S.bars.map(function(r){return{time:r[0],open:r[1],high:r[2],low:r[3],close:r[4]}});
+  if(data.length){var t=data[data.length-1].time;
+   if(data.length===lastLen||(data.length===lastLen+1&&t>lastT)){if(data.length>lastLen&&lastLen>0)series.update(data[data.length-2]);series.update(data[data.length-1])}
+   else series.setData(data);
+   lastLen=data.length;lastT=t;if(!fitted){chart.timeScale().fitContent();fitted=true}}
+  lines.forEach(function(l){series.removePriceLine(l)});lines=[];var mk=[];
+  S.strategies.forEach(function(st){if(!show[st.key])return;var c=COL[st.key];
+   st.levels.forEach(function(l){lines.push(series.createPriceLine({price:l[1],color:c,lineWidth:1,lineStyle:2,axisLabelVisible:false,title:l[0]}))});
+   if(st.side){if(st.target!=null)lines.push(series.createPriceLine({price:st.target,color:c,lineWidth:2,lineStyle:0,axisLabelVisible:true,title:'alvo'}));
+    if(st.stop!=null)lines.push(series.createPriceLine({price:st.stop,color:c,lineWidth:2,lineStyle:1,axisLabelVisible:true,title:'stop'}));
+    mk.push({time:st.entry_t,position:st.side>0?'belowBar':'aboveBar',color:c,shape:st.side>0?'arrowUp':'arrowDown',text:st.side>0?'C':'V'})}
+   st.trades.forEach(function(t){mk.push({time:t.entry_t,position:t.side>0?'belowBar':'aboveBar',color:c,shape:t.side>0?'arrowUp':'arrowDown',text:t.side>0?'C':'V'});
+    mk.push({time:t.exit_t,position:t.side>0?'aboveBar':'belowBar',color:c,shape:'circle',text:'sai'})})});
+  mk.sort(function(a,b){return a.time-b.time});series.setMarkers(mk)}
+ // legenda
+ var lg=document.getElementById('legend');if(!lg.dataset.done&&S.strategies.length){lg.dataset.done=1;
+  lg.innerHTML='<span>Níveis no gráfico:</span>'+S.strategies.map(function(st){return '<label><input type="checkbox" data-k="'+st.key+'"'+(show[st.key]?' checked':'')+'><i style="background:'+COL[st.key]+'"></i>'+st.label+'</label>'}).join('');
+  Array.prototype.forEach.call(lg.querySelectorAll('input'),function(i){i.onchange=function(){show[i.dataset.k]=i.checked}})}
+ // cartoes
+ var prevV='';
+ document.getElementById('cards').innerHTML=S.strategies.map(function(st){
+  var head='';if(st.verdict!==prevV){prevV=st.verdict;head='<div class="grp">'+GT[st.verdict]+'</div>'}
+  var act=st.stage==='sinal'||st.stage==='posicionada';
+  var tr=st.trades.map(function(t){return (t.side>0?'Compra ':'Venda ')+t.entry_hm+' a '+f(t.entry,3)+' → '+t.exit_hm+' a '+f(t.exit,3)+' ('+(t.pnl>=0?'+':'')+f(t.pnl,2)+'%)'}).join('<br>');
+  return head+'<div class="card'+(act?' act':'')+'" style="border-left-color:'+COL[st.key]+'"><h3>'+st.label+'<span class="tag '+(st.verdict==='robusta'?'c':'')+'">'+VD[st.verdict]+'</span><span class="stage">'+st.stage+'</span></h3><div class="st">'+(st.status||'')+'</div>'+(tr?'<div class="tr">'+tr+'</div>':'')+'<div class="rule">'+st.rule+'</div></div>'}).join('');
+ // eventos
+ var KN={sinal:'SINAL',entrada:'Entrada',saida:'Saída',alerta:'Alerta',info:'Info'},mx=lastId,ring=false;
+ document.getElementById('feed').innerHTML='<tr><th>Hora NY</th><th>Estratégia</th><th>Evento</th><th>Detalhe</th></tr>'+S.feed.map(function(e){
+  var nw=!first&&e.id>lastId;if(e.id>mx)mx=e.id;if(nw&&!e.hist&&(e.kind==='sinal'||e.kind==='saida'||e.kind==='alerta'))ring=true;
+  return '<tr class="'+(nw?'new':'')+'"><td>'+e.time+'</td><td>'+e.label+'</td><td class="k">'+KN[e.kind]+'</td><td>'+e.text+(e.hist?' (reconstruído)':'')+'</td></tr>'}).join('');
+ if(ring)beep();lastId=mx;first=false;
+ document.title=(S.last==null?'':f(S.last,2)+' · ')+'SOXL ao vivo';
+}
+function note(t,err){var b=document.getElementById('banner');b.style.display='block';b.className='banner'+(err?' err':'');b.textContent=t}
+var q=new URLSearchParams(location.search),BUILD='c48a3140e7';
+note('Iniciando...');
+var W=new Worker('soxl_web_worker.js?v='+BUILD);
+W.onmessage=function(m){var d=m.data;if(d.type==='state')render(d.state);else if(d.type==='status')note(d.text,d.error)};
+W.onerror=function(e){note('Falha ao carregar o motor: '+(e.message||e),true)};
+W.postMessage({type:'boot',coin:q.get('coin')||'xyz:SOXL',poll:parseFloat(q.get('poll'))||4,build:BUILD});
+document.addEventListener('visibilitychange',function(){if(!document.hidden)W.postMessage({type:'now'})});
+})();
+</script></body></html>
